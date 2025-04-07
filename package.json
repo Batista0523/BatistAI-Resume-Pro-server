@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/server.ts",
     "db_schema": "psql -U postgres -f db/schema.sql",
     "db_seed": "psql -U postgres -f db/seed.sql",
     "clean": "rm -rf dist"
