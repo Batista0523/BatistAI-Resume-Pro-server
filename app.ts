@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";  // Import express and types
 import cors from "cors";  // Import CORS with types
 import  User from "./controllers/userController"
+import Resume from "./controllers/resumeControllers";
 const app = express();  // Create an Express app
 
 // Middleware setup
@@ -14,7 +15,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 //Router heres
 app.use("/users" , User)
-
+app.use("/resumes" , Resume)
 
 // Example for a resume optimization route
 app.post("/optimize", (req: Request, res: Response) => {
