@@ -6,21 +6,21 @@ interface Resume {
   original_text: string;
   optimized_text?: string;
   feedback?: object;
-  is_premium?: boolean;
   created_at?: string;
 }
 
-//Get all resume
+// Get all resumes
 const getAllResumes = async (): Promise<Resume[]> => {
   try {
     const allResume = await db.any<Resume>("SELECT * FROM resumes");
     return allResume;
   } catch (err) {
-    console.error("Error retrieving resumes by user", err);
+    console.error("Error retrieving resumes", err);
     throw err;
   }
 };
-//Get one Resume
+
+// Get one resume
 const getOneResume = async (id: number): Promise<Resume | null> => {
   try {
     const oneResume = await db.one<Resume>(
@@ -33,31 +33,41 @@ const getOneResume = async (id: number): Promise<Resume | null> => {
     throw err;
   }
 };
-//Update Resume
+
+// Update resume
 const updateResume = async (
   id: number,
   updates: Partial<Resume>
 ): Promise<Resume | null> => {
   try {
-    const { original_text, optimized_text, feedback, is_premium } = updates;
+    const { original_text, optimized_text, feedback } = updates;
+
     const updatedResume = await db.one<Resume>(
-      "UPDATE resumes SET original_text = COALESCE($1, original_text) , optimized_text = COALESCE($2,optimized_text) ,feedback = COALESCE($3, feedback),is_premium = COALESCE($4,is_premium) WHERE id=$5 RETURNING *",
-      [original_text, optimized_text, feedback, is_premium, id]
+      `UPDATE resumes 
+       SET original_text = COALESCE($1, original_text), 
+           optimized_text = COALESCE($2, optimized_text), 
+           feedback = COALESCE($3, feedback) 
+       WHERE id = $4 
+       RETURNING *`,
+      [original_text, optimized_text, feedback, id]
     );
+
     return updatedResume;
   } catch (err) {
     console.error("Error updating resume", err);
     throw err;
   }
 };
-//Create Resume
+
+// Create resume
 const createResume = async (resume: Resume): Promise<Resume> => {
   try {
-    const { user_id, original_text, optimized_text, feedback, is_premium } =
-      resume;
+    const { user_id, original_text, optimized_text, feedback } = resume;
     const createdResume = await db.one<Resume>(
-      "INSERT INTO resumes (user_id,original_text,optimized_text,feedback,is_premium) VALUES ($1,$2,$3,$4,$5) RETURNING *",
-      [user_id, original_text, optimized_text, feedback, is_premium]
+      `INSERT INTO resumes (user_id, original_text, optimized_text, feedback) 
+       VALUES ($1, $2, $3, $4) 
+       RETURNING *`,
+      [user_id, original_text, optimized_text, feedback]
     );
     return createdResume;
   } catch (err) {
@@ -66,7 +76,7 @@ const createResume = async (resume: Resume): Promise<Resume> => {
   }
 };
 
-//Delete Resume
+// Delete resume
 const deleteResume = async (id: number): Promise<Resume | null> => {
   try {
     const deletedResume = await db.oneOrNone<Resume>(

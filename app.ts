@@ -1,28 +1,22 @@
-import express, { Request, Response } from "express";  // Import express and types
+import express, { Request, Response } from "express";
 import cors from "cors";  // Import CORS with types
-import  User from "./controllers/userController"
-import Resume from "./controllers/resumeControllers";
-const app = express();  // Create an Express app
+import User from "./controllers/userController";
+import Resume from "./controllers/resumeControllers";  
+import Optimize from "./controllers/openAIOptimizedController";
+
+const app = express();
 
 // Middleware setup
-app.use(cors());  // Use CORS for handling cross-origin requests
-app.use(express.json());  // Parse JSON request bodies
+app.use(cors());
+app.use(express.json());
 
-
-
+// Routes setup
 app.get("/", (req: Request, res: Response) => {
-    res.send("Welcome to the Resume Optimizer API");
-});
-//Router heres
-app.use("/users" , User)
-app.use("/resumes" , Resume)
-
-// Example for a resume optimization route
-app.post("/optimize", (req: Request, res: Response) => {
-  const { resume } = req.body;
-  // Imagine calling an AI function to optimize the resume here
-  res.send({ message: "Resume optimized successfully!", optimizedResume: resume });
+  res.send("Welcome to the Resume Optimizer API");
 });
 
-export default app;  // Export the app as default
+app.use("/users", User);  // Users route
+app.use("/resumes", Resume);  // Resumes route
+app.use("/optimize", Optimize );  // Optimize route
 
+export default app;

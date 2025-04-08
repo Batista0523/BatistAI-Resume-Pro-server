@@ -10,6 +10,7 @@ CREATE TABLE users (
   email VARCHAR(255) UNIQUE NOT NULL,
   full_name VARCHAR(100),
   password_hash TEXT NOT NULL,
+  is_premium BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -19,8 +20,7 @@ CREATE TABLE resumes (
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   original_text TEXT NOT NULL,
   optimized_text TEXT,
-  feedback JSONB, -- AI suggestions can be stored as structured feedback
-  is_premium BOOLEAN DEFAULT FALSE,
+  feedback JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -32,5 +32,6 @@ CREATE TABLE payments (
   currency VARCHAR(10) DEFAULT 'usd',
   stripe_payment_intent_id VARCHAR(255),
   status VARCHAR(50) DEFAULT 'pending',
+  metadata JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

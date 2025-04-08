@@ -52,7 +52,7 @@ Resume.post("/", async (req: Request, res: Response) => {
       .json({ success: false, error: "Internal error creating resume" });
   }
 });
-
+//Delete Resume
 Resume.delete("/:id", async (req: Request, res: Response) => {
     const { id } = req.params;
   try {
@@ -69,7 +69,7 @@ Resume.delete("/:id", async (req: Request, res: Response) => {
       .json({ success: false, error: "Internal error deleting resume" });
   }
 });
-
+//Update Resume
 Resume.put("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

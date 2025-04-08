@@ -6,7 +6,8 @@ interface User {
   id?: number;
   full_name?: string;
   email: string;
-  password?: string; // Used when creating or authenticating
+  password?: string;
+  is_premium?: boolean;
   created_at?: string;
 }
 
@@ -17,7 +18,7 @@ interface AuthenticatedUserFromDB extends User {
 // Get all users (excluding password)
 const getAllUsers = async (): Promise<User[]> => {
   try {
-    const allUsers = await db.any<User>("SELECT * FROM users");
+    const allUsers = await db.any<User>("SELECT id, full_name, email, is_premium, created_at FROM users");
     return allUsers;
   } catch (err) {
     console.error("Error retrieving users", err);
@@ -29,7 +30,7 @@ const getAllUsers = async (): Promise<User[]> => {
 const getOneUser = async (id: number): Promise<User | null> => {
   try {
     const oneUser = await db.one<User>(
-      "SELECT * FROM users WHERE id=$1",
+      "SELECT id, full_name, email, is_premium, created_at FROM users WHERE id=$1",
       [id]
     );
     return oneUser;
@@ -55,7 +56,6 @@ const authenticateUser = async (
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) throw new Error("Invalid password");
 
-    // Remove password_hash before returning user object
     const { password_hash: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   } catch (err) {
@@ -67,9 +67,8 @@ const authenticateUser = async (
 // Create a new user
 const createUser = async (user: User): Promise<User> => {
   try {
-    //first check if user already exist
     const existingUser = await db.oneOrNone<User>(
-      "SELECT * FROM users WHERE email=$1",
+      "SELECT id FROM users WHERE email=$1",
       [user.email]
     );
     if (existingUser) {
@@ -78,8 +77,10 @@ const createUser = async (user: User): Promise<User> => {
 
     const hashedPassword = await bcrypt.hash(user.password!, 10);
     const createdUser = await db.one<User>(
-      "INSERT INTO users (full_name, email, password_hash) VALUES($1, $2, $3) RETURNING *",
-      [user.full_name, user.email, hashedPassword]
+      `INSERT INTO users (full_name, email, password_hash, is_premium) 
+       VALUES($1, $2, $3, $4) 
+       RETURNING id, full_name, email, is_premium, created_at`,
+      [user.full_name, user.email, hashedPassword, user.is_premium ?? false]
     );
     return createdUser;
   } catch (err) {
@@ -94,17 +95,18 @@ const updateUser = async (
   user: Partial<User>
 ): Promise<User | null> => {
   try {
-    const { full_name, email, password } = user;
+    const { full_name, email, password, is_premium } = user;
     const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
 
     const updatedUser = await db.oneOrNone<User>(
       `UPDATE users 
        SET full_name = COALESCE($1, full_name),
            email = COALESCE($2, email),
-           password_hash = COALESCE($3, password_hash)
-       WHERE id=$4 
-       RETURNING *`,
-      [full_name, email, hashedPassword, id]
+           password_hash = COALESCE($3, password_hash),
+           is_premium = COALESCE($4, is_premium)
+       WHERE id=$5 
+       RETURNING id, full_name, email, is_premium, created_at`,
+      [full_name, email, hashedPassword, is_premium, id]
     );
     return updatedUser;
   } catch (err) {
@@ -117,7 +119,7 @@ const updateUser = async (
 const deleteUser = async (id: number): Promise<User | null> => {
   try {
     const deletedUser = await db.oneOrNone<User>(
-      "DELETE FROM users WHERE id=$1 RETURNING *",
+      "DELETE FROM users WHERE id=$1 RETURNING id, full_name, email, is_premium, created_at",
       [id]
     );
     return deletedUser;
