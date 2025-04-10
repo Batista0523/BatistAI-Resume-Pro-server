@@ -3,9 +3,16 @@
 -- Insert sample users
 INSERT INTO users (email, full_name, password_hash, is_premium) 
 VALUES 
-  ('john.doe@example.com', 'John Doe', 'hashedpassword123', FALSE),
-  ('jane.smith@example.com', 'Jane Smith', 'hashedpassword456', TRUE),
-  ('alex.johnson@example.com', 'Alex Johnson', 'hashedpassword789', FALSE);
+  ('charles.adams@example.com', 'Charles Adams', 'hashedpassword001', FALSE),
+  ('mary.jones@example.com', 'Mary Jones', 'hashedpassword002', FALSE),
+  ('paul.taylor@example.com', 'Paul Taylor', 'hashedpassword003', FALSE),
+  ('lucy.martin@example.com', 'Lucy Martin', 'hashedpassword004', FALSE),
+  ('robert.moore@example.com', 'Robert Moore', 'hashedpassword005', FALSE),
+  ('clara.davis@example.com', 'Clara Davis', 'hashedpassword006', FALSE),
+  ('john.wilson@example.com', 'John Wilson', 'hashedpassword007', FALSE),
+  ('nancy.martinez@example.com', 'Nancy Martinez', 'hashedpassword008', FALSE),
+  ('thomas.lee@example.com', 'Thomas Lee', 'hashedpassword009', TRUE),
+  ('lily.garcia@example.com', 'Lily Garcia', 'hashedpassword010', TRUE);
 
 -- Insert sample resumes
 INSERT INTO resumes (user_id, original_text, optimized_text, feedback) 
