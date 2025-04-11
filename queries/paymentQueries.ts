@@ -62,7 +62,8 @@ const createPayment = async (payment: Payment): Promise<Payment> => {
 // Update the payment
 const updatePayment = async (
   stripe_payment_intent_id: string,
-  newStatus: string
+  newStatus: string,
+
 ): Promise<Payment> => {
   try {
     const updatedPayment = await db.one<Payment>(
@@ -70,7 +71,7 @@ const updatePayment = async (
          SET status = $1
          WHERE stripe_payment_intent_id = $2
          RETURNING *`,
-      [newStatus, stripe_payment_intent_id]
+      [newStatus, stripe_payment_intent_id ]
     );
     return updatedPayment;
   } catch (err) {
