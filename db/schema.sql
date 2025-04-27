@@ -1,10 +1,10 @@
 \c resume;
--- Drop tables if they exist
+
 DROP TABLE IF EXISTS payments CASCADE;
 DROP TABLE IF EXISTS resumes CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- Create Users Table
+
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create Resumes Table
+
 CREATE TABLE resumes (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -24,7 +24,7 @@ CREATE TABLE resumes (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create Payments Table
+
 CREATE TABLE payments (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
