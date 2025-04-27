@@ -18,8 +18,8 @@ CREATE TABLE users (
 CREATE TABLE resumes (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  original_text TEXT NOT NULL,
-  optimized_text TEXT,
+  original_text VARCHAR,
+  optimized_text VARCHAR,
   feedback JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

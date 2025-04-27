@@ -15,10 +15,10 @@ interface AuthenticatedUserFromDB extends User {
   password_hash: string;
 }
 
-// Get all users (excluding password)
+// Get all users 
 const getAllUsers = async (): Promise<User[]> => {
   try {
-    const allUsers = await db.any<User>("SELECT id, full_name, email, is_premium, created_at FROM users");
+    const allUsers = await db.any<User>("SELECT * FROM users");
     return allUsers;
   } catch (err) {
     console.error("Error retrieving users", err);
@@ -30,7 +30,7 @@ const getAllUsers = async (): Promise<User[]> => {
 const getOneUser = async (id: number): Promise<User | null> => {
   try {
     const oneUser = await db.one<User>(
-      "SELECT id, full_name, email, is_premium, created_at FROM users WHERE id=$1",
+      "SELECT * FROM users WHERE id=$1",
       [id]
     );
     return oneUser;
@@ -79,7 +79,7 @@ const createUser = async (user: User): Promise<User> => {
     const createdUser = await db.one<User>(
       `INSERT INTO users (full_name, email, password_hash, is_premium) 
        VALUES($1, $2, $3, $4) 
-       RETURNING id, full_name, email, is_premium, created_at`,
+       RETURNING *`,
       [user.full_name, user.email, hashedPassword, user.is_premium ?? false]
     );
     return createdUser;
@@ -105,7 +105,7 @@ const updateUser = async (
            password_hash = COALESCE($3, password_hash),
            is_premium = COALESCE($4, is_premium)
        WHERE id=$5 
-       RETURNING id, full_name, email, is_premium, created_at`,
+       RETURNING *`,
       [full_name, email, hashedPassword, is_premium, id]
     );
     return updatedUser;
@@ -119,7 +119,7 @@ const updateUser = async (
 const deleteUser = async (id: number): Promise<User | null> => {
   try {
     const deletedUser = await db.oneOrNone<User>(
-      "DELETE FROM users WHERE id=$1 RETURNING id, full_name, email, is_premium, created_at",
+      "DELETE FROM users WHERE id=$1 RETURNING *",
       [id]
     );
     return deletedUser;

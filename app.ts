@@ -7,7 +7,7 @@ import Payments, { handleStripeWebhook } from "./controllers/stripeController";
 
 const app = express();
 
-// 🧠 👇 Webhook must come BEFORE express.json() and use express.raw()
+
 app.post(
   "/payments/webhook",
   express.raw({ type: "application/json" }),
@@ -16,7 +16,7 @@ app.post(
 
 // Middlewares for other routes
 app.use(cors());
-app.use(express.json()); // Normal JSON middleware AFTER the raw webhook
+app.use(express.json()); 
 
 // Routes
 app.get("/", (req: Request, res: Response) => {
@@ -26,6 +26,6 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/users", User);
 app.use("/resumes", Resume);
 app.use("/optimize", Optimize);
-app.use("/payments", Payments); // Includes payment intent POST (not webhook)
+app.use("/payments", Payments); 
 
 export default app;

@@ -11,12 +11,12 @@ interface PremiumUser {
 Optimize.post("/", async (req: Request, res: Response): Promise<void> => {
   const { resume, userId } = req.body;
 
-  if (!resume || !userId) {
+  if (!resume || !userId ) {
     res.status(400).json({ success: false, error: "Missing resume or userId" });
     return;
   }
 
-  const numericUserId = Number(userId);
+  const numericUserId = Number(userId );
   if (isNaN(numericUserId)) {
     res
       .status(400)

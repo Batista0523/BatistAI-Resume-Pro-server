@@ -5,7 +5,7 @@ interface Resume {
   user_id: number;
   original_text: string;
   optimized_text?: string;
-  feedback?: object;
+  feedback?: any;
   created_at?: string;
 }
 
@@ -42,6 +42,8 @@ const updateResume = async (
   try {
     const { original_text, optimized_text, feedback } = updates;
 
+    const validFeedback = feedback ? JSON.stringify(feedback) : null;
+
     const updatedResume = await db.one<Resume>(
       `UPDATE resumes 
        SET original_text = COALESCE($1, original_text), 
@@ -49,7 +51,7 @@ const updateResume = async (
            feedback = COALESCE($3, feedback) 
        WHERE id = $4 
        RETURNING *`,
-      [original_text, optimized_text, feedback, id]
+      [original_text, optimized_text, validFeedback, id]
     );
 
     return updatedResume;
@@ -89,6 +91,19 @@ const deleteResume = async (id: number): Promise<Resume | null> => {
     throw err;
   }
 };
+// Get resume by user ID
+const getResumesByUserId = async (user_id: number): Promise<Resume[]> => {
+  try {
+    const resumes = await db.any(
+      "SELECT * FROM resumes WHERE user_id = $1 ORDER BY created_at DESC",
+      [user_id]
+    );
+    return resumes;
+  } catch (err) {
+    console.error("Error retrieving resumes by user_id", err);
+    throw err;
+  }
+};
 
 export {
   getAllResumes,
@@ -96,4 +111,5 @@ export {
   updateResume,
   createResume,
   deleteResume,
+  getResumesByUserId,
 };

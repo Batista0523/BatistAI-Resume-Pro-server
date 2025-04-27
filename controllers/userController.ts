@@ -12,9 +12,9 @@ const User = express.Router();
 
 // Login route
 User.post("/login", async (req: Request, res: Response) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   try {
-    const authenticatedUser = await authenticateUser(username, password);
+    const authenticatedUser = await authenticateUser(email, password);
     res.status(200).json({ success: true, payload: authenticatedUser });
   } catch (err) {
     console.error("Error logging user", err);

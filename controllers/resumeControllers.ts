@@ -5,9 +5,39 @@ import {
   updateResume,
   createResume,
   deleteResume,
+  getResumesByUserId
 } from "../queries/resumeQueries";
-
+import { optimizeResumeWithAI } from "../services/openaiService";
 const Resume = express.Router();
+
+
+Resume.post("/:id/optimize", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { original_text } = req.body;
+
+  try {
+    const { optimized_text, feedback } = await optimizeResumeWithAI(original_text);
+
+    const updated = await updateResume(Number(id), {
+      optimized_text,
+      feedback,
+    });
+
+    if (updated) {
+      res.status(200).json({
+        success: true,
+        optimized_text,
+        feedback,
+      });
+    } else {
+      res.status(404).json({ success: false, error: "Resume not found" });
+    }
+  } catch (err) {
+    console.error("Error optimizing resume:", err);
+    res.status(500).json({ success: false, error: "Internal error optimizing resume" });
+  }
+});
+
 
 //Get all Resume
 Resume.get("/", async (req: Request, res: Response) => {
@@ -84,4 +114,22 @@ Resume.put("/:id", async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: "Internal error" });
   }
 });
+
+// Get Resume by User ID
+Resume.get("/user/:userId", async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const resume = await getResumesByUserId(Number(userId));
+    if (resume) {
+      res.status(200).json({ success: true, payload: resume });
+    } else {
+      res.status(404).json({ success: false, error: "Resume not found for this user" });
+    }
+  } catch (err) {
+    console.error("Error getting resume by user", err);
+    res.status(500).json({ success: false, error: "Internal error getting resume by user" });
+  }
+});
+
+
 export default Resume;
