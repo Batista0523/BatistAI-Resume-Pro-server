@@ -44,7 +44,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       if (user && !user.is_premium) {
         console.log("⏳ Updating user to premium...");
         const updated = await updateUser(userId, { is_premium: true });
-        console.log("✅ Update result:", updated);
       } else {
         console.log("⚠️ User already premium or not found.");
       }
@@ -77,6 +76,7 @@ Payments.post("/", async (req: Request, res: Response) => {
       amount: amount * 100,
       currency: "usd",
       metadata: fullMetadata,
+      payment_method_types: ['card'],
     });
 
     await createPayment({
