@@ -19,7 +19,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export const handleStripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
-  console.log("⚡ Webhook received!");
+  console.log("⚡ Webhook received at /payments/webhook");
+  console.log("🔐 stripe-signature header:", sig);
+  console.log("📬 raw body (first 200 chars):", req.body.toString().slice(0, 200));
 
   try {
     const event = stripe.webhooks.constructEvent(
@@ -27,7 +29,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-
+    console.log("✅ Webhook signature verified, event type:", event.type);
     if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const userId = parseInt(paymentIntent.metadata.user_id);
@@ -50,6 +52,9 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       }
 
       await updatePayment(paymentIntent.id, "succeeded");
+      console.log("💰 payment_intent succeeded:", paymentIntent.id);
+      console.log("🌐 livemode:", paymentIntent.livemode);
+      console.log("🔍 metadata:", paymentIntent.metadata);
       res.json({ received: true });
     } else {
       console.log("Unhandled event type:", event.type);
