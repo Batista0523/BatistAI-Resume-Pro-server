@@ -19,50 +19,55 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export const handleStripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
-  console.log("stripe signature" , sig)
+  console.log("stripe signature", sig);
+
+  let event: Stripe.Event;
 
   try {
-    const event = stripe.webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-    console.log("✅ Webhook signature verified, event type:", event.type);
-    if (event.type === "payment_intent.succeeded") {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      const userId = parseInt(paymentIntent.metadata.user_id);
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err);
+    return res.status(400).send(`Webhook Error: ${err}`);
+  }
 
-     
 
+  res.status(200).send("Received");
+
+  console.log("✅ Webhook signature verified, event type:", event.type);
+
+ 
+  if (event.type === "payment_intent.succeeded") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const userId = parseInt(paymentIntent.metadata.user_id);
+
+    try {
       const user = await db.oneOrNone(
         "SELECT id, is_premium FROM users WHERE id = $1",
         [userId]
       );
 
-   
-
       if (user && !user.is_premium) {
         console.log("⏳ Updating user to premium...");
-        const updated = await updateUser(userId, { is_premium: true });
+        await updateUser(userId, { is_premium: true });
       } else {
         console.log("⚠️ User already premium or not found.");
       }
 
       await updatePayment(paymentIntent.id, "succeeded");
-
-      res.json({ received: true });
-    } else {
-      console.log("Unhandled event type:", event.type);
-      res.json({ received: true });
+    } catch (error) {
+      console.error("❌ Error processing webhook event:", error);
     }
-  } catch (err) {
-    console.error("Webhook Error:", err);
-    res.status(400).send("Webhook error");
+  } else {
+    console.log("Unhandled event type:", event.type);
   }
 };
 
-//Create Payments
 
+//Create Payments
 Payments.post("/", async (req: Request, res: Response) => {
   try {
     const { user_id, amount, metadata = {} } = req.body;
