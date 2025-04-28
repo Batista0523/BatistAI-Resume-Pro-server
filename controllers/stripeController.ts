@@ -9,7 +9,7 @@ import {
   createPayment,
   deletePayment,
 } from "../queries/paymentQueries";
-
+import { RequestHandler } from "express";
 import { updateUser } from "../queries/user";
 
 const Payments = express.Router();
@@ -17,7 +17,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2023-10-16" as any,
 });
 
-export const handleStripeWebhook = async (req: Request, res: Response) => {
+export const handleStripeWebhook: RequestHandler = async (req, res) => {
   const sig = req.headers["stripe-signature"] as string;
   console.log("stripe signature", sig);
 
@@ -31,15 +31,14 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     );
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
-    return res.status(400).send(`Webhook Error: ${err}`);
+    res.status(400).send(`Webhook Error: ${err}`);
+    return;
   }
-
 
   res.status(200).send("Received");
 
   console.log("✅ Webhook signature verified, event type:", event.type);
 
- 
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
     const userId = parseInt(paymentIntent.metadata.user_id);
@@ -65,7 +64,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     console.log("Unhandled event type:", event.type);
   }
 };
-
 
 //Create Payments
 Payments.post("/", async (req: Request, res: Response) => {
