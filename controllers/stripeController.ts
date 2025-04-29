@@ -1,4 +1,3 @@
-
 import express, { Request, Response } from "express";
 import Stripe from "stripe";
 import db from "../db/db.Config";
@@ -9,7 +8,7 @@ import {
   createPayment,
   deletePayment,
 } from "../queries/paymentQueries";
-import { RequestHandler } from "express";
+
 import { updateUser } from "../queries/user";
 
 const Payments = express.Router();
@@ -17,58 +16,57 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2023-10-16" as any,
 });
 
-export const handleStripeWebhook: RequestHandler = async (req, res) => {
+export const handleStripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
-  console.log("stripe signature", sig);
-
-  let event: Stripe.Event;
+  console.log("Stripe signature received: ", sig);
 
   try {
-    event = stripe.webhooks.constructEvent(
+    const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err);
-    res.status(400).send(`Webhook Error: ${err}`);
-    return;
-  }
+    console.log("✅ Webhook signature verified, event type:", event.type);
 
-  res.status(200).send("Received");
+    if (event.type === "payment_intent.succeeded") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      console.log("PaymentIntent succeeded: ", paymentIntent.id);
 
-  console.log("✅ Webhook signature verified, event type:", event.type);
+      const userId = parseInt(paymentIntent.metadata.user_id);
+      console.log("User ID from paymentIntent metadata: ", userId);
 
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object as Stripe.PaymentIntent;
-    const userId = parseInt(paymentIntent.metadata.user_id);
-
-    try {
       const user = await db.oneOrNone(
         "SELECT id, is_premium FROM users WHERE id = $1",
         [userId]
       );
+      console.log("User from DB: ", user);
 
       if (user && !user.is_premium) {
         console.log("⏳ Updating user to premium...");
-        await updateUser(userId, { is_premium: true });
+        const updated = await updateUser(userId, { is_premium: true });
+        console.log("User updated to premium: ", updated);
       } else {
         console.log("⚠️ User already premium or not found.");
       }
 
       await updatePayment(paymentIntent.id, "succeeded");
-    } catch (error) {
-      console.error("❌ Error processing webhook event:", error);
+      console.log("Payment status updated in the database.");
+
+      res.json({ received: true });
+    } else {
+      console.log("Unhandled event type:", event.type);
+      res.json({ received: true });
     }
-  } else {
-    console.log("Unhandled event type:", event.type);
+  } catch (err) {
+    console.error("Webhook Error:", err);
+    res.status(400).send("Webhook error");
   }
 };
 
-//Create Payments
 Payments.post("/", async (req: Request, res: Response) => {
   try {
     const { user_id, amount, metadata = {} } = req.body;
+    console.log("Creating payment intent with amount:", amount, "for user_id:", user_id);
 
     const fullMetadata = {
       user_id: user_id.toString(),
@@ -89,6 +87,7 @@ Payments.post("/", async (req: Request, res: Response) => {
       metadata: fullMetadata,
     });
 
+    console.log("Payment intent created: ", paymentIntent.id);
     res.send({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
     console.error("Error creating payment intent", error);
@@ -96,7 +95,6 @@ Payments.post("/", async (req: Request, res: Response) => {
   }
 });
 
-//Get all payments details
 Payments.get("/", async (req: Request, res: Response) => {
   try {
     const allPayment = await getAllPayment();
@@ -107,7 +105,6 @@ Payments.get("/", async (req: Request, res: Response) => {
   }
 });
 
-//Get one payment detail
 Payments.get("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -122,7 +119,7 @@ Payments.get("/:id", async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: "Internal error" });
   }
 });
-//Delete Payment
+
 Payments.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
