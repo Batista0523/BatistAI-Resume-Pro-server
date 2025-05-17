@@ -28,7 +28,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     );
     console.log("✅ Webhook signature verified, event type:", event.type);
 
-    if (event.type === "payment_intent.succeeded") {
+    if (event.type === "payment_intent.created") {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       console.log("PaymentIntent succeeded: ", paymentIntent.id);
 
