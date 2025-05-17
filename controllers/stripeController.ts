@@ -66,7 +66,12 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 Payments.post("/", async (req: Request, res: Response) => {
   try {
     const { user_id, amount, metadata = {} } = req.body;
-    console.log("Creating payment intent with amount:", amount, "for user_id:", user_id);
+    console.log(
+      "Creating payment intent with amount:",
+      amount,
+      "for user_id:",
+      user_id
+    );
 
     const fullMetadata = {
       user_id: user_id.toString(),
@@ -77,7 +82,7 @@ Payments.post("/", async (req: Request, res: Response) => {
       amount: amount * 100,
       currency: "usd",
       metadata: fullMetadata,
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
     });
 
     await createPayment({
